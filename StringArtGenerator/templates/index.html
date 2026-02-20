@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Art Studio | Professional Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --canvas-shadow: 0 0 50px rgba(139, 92, 246, 0.15);
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease-out; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(circle at top right, #1e1b4b, var(--bg));
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 32px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle { color: var(--text-dim); margin-bottom: 40px; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            padding: 100px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .page { display: none; opacity: 0; transform: translateY(10px); }
+        .page.active { display: block; opacity: 1; transform: translateY(0); }
+
+        .editor-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .frame-outer {
+            position: relative;
+            padding: 15px;
+            background: #000;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: var(--canvas-shadow);
+            border: 8px solid #1e293b;
+            flex-shrink: 0;
+        }
+
+        .frame-container {
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        @media (max-width: 500px) {
+            .frame-container { width: 300px; height: 300px; }
+        }
+
+        canvas { display: block; cursor: crosshair; width: 100%; height: 100%; }
+
+        .settings-panel {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            min-width: 280px;
+            flex: 1;
+            max-width: 350px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-dim);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: inherit;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 16px 32px;
+            font-weight: 700;
+            border-radius: 14px;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #page3, #page4 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(139, 92, 246, 0.1);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .download-links {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .download-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>STRING ART STUDIO</h1>
+        <p class="subtitle">Computational Weaving Engine</p>
+
+        <div id="page1" class="page active">
+            <div class="upload-area" id="dropZone">
+                <i data-lucide="image-plus" size="48"></i>
+                <div style="text-align: center;">
+                    <p style="font-weight: 600; margin-bottom: 5px;">Drop your portrait here</p>
+                    <p style="font-size: 0.8rem; color: var(--text-dim);">Supported: JPG, PNG, WEBP</p>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept="image/*">
+            </div>
+        </div>
+
+        <div id="page2" class="page">
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="changeImage()">
+                    <i data-lucide="arrow-left" size="16"></i> Change
+                </button>
+                <div style="display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 12px;">
+                    <i data-lucide="zoom-out" size="14" color="#94a3b8" onclick="adjustZoom(-50)" style="cursor: pointer;"></i>
+                    <input type="range" id="zoomSlider" min="100" max="1000" value="100">
+                    <i data-lucide="zoom-in" size="14" color="#94a3b8" onclick="adjustZoom(50)" style="cursor: pointer;"></i>
+                </div>
+            </div>
+
+            <div class="editor-layout">
+                <div class="frame-outer">
+                    <div class="frame-container">
+                        <canvas id="canvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="settings-panel">
+                    <div class="input-group">
+                        <label><i data-lucide="map-pin" size="14"></i> PINS</label>
+                        <input type="number" id="pins" value="288">
+                    </div>
+                    <div class="input-group">
+                        <label><i data-lucide="git-branch" size="14"></i> LINES</label>
+                        <input type="number" id="lines" value="3000">
+                    </div>
+                    <button id="generateBtn" class="btn" onclick="generateArt()">
+                        GENERATE <i data-lucide="sparkles" size="18"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page3" class="page">
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="backToEditor()">
+                    <i data-lucide="chevron-left" size="16"></i> Edit Parameters
+                </button>
+            </div>
+
+            <div class="frame-outer" style="box-shadow: 0 0 60px rgba(139, 92, 246, 0.3);">
+                <div class="frame-container">
+                    <canvas id="weavingCanvas" width="480" height="480"></canvas>
+                </div>
+            </div>
+
+            <div id="weaving-loader">
+                <div class="spinner"></div>
+                <p id="statusText" style="font-weight: 600; letter-spacing: 1px; color: var(--accent);">ALGORITHM IN PROGRESS...</p>
+            </div>
+
+            <div id="results" class="hidden">
+                <div class="download-links">
+                    <a id="downloadImg" style="cursor: pointer;"><i data-lucide="download" size="18"></i> Export PNG</a>
+                    <a id="downloadTxt" style="cursor: pointer;"><i data-lucide="file-text" size="18"></i> Weaving Map</a>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                    <button class="btn-secondary" onclick="replayAnimation()">
+                        <i data-lucide="refresh-cw" size="14"></i> Replay
+                    </button>
+                    <button class="btn-secondary" onclick="startGuide()" style="border-color: var(--accent); color: var(--text-main);">
+                        <i data-lucide="footprints" size="14"></i> Step-by-Step Guide
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page4" class="page">
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="exitGuide()">
+                    <i data-lucide="x" size="16"></i> Close Guide
+                </button>
+            </div>
+
+            <div class="frame-outer" style="box-shadow: 0 0 60px rgba(139, 92, 246, 0.3);">
+                <div class="frame-container">
+                    <canvas id="guideCanvas" width="480" height="480"></canvas>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <div style="font-size: 1rem; font-weight: 700; color: var(--text-dim);">
+                    STEP: <span id="guideStepNum" style="color: var(--text-main);">1</span> / <span id="guideTotalSteps">3000</span>
+                </div>
+
+                <div style="font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 15px;">
+                    Pin <span id="guidePinFrom" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 12px;">0</span>
+                    <i data-lucide="arrow-right" size="24" color="#8b5cf6"></i>
+                    Pin <span id="guidePinTo" style="background: var(--accent); color: white; padding: 5px 15px; border-radius: 12px; box-shadow: 0 0 15px rgba(139,92,246,0.4);">0</span>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 10px; width: 100%; max-width: 300px;">
+                    <button class="btn" style="padding: 12px; flex: 1; background: rgba(255,255,255,0.1);" onclick="prevStep()">
+                        <i data-lucide="chevron-left" size="20"></i> Prev
+                    </button>
+                    <button class="btn" style="padding: 12px; flex: 1;" onclick="nextStep()">
+                        Next <i data-lucide="chevron-right" size="20"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const zoomSlider = document.getElementById('zoomSlider');
+
+        let img = new Image(), scale = 1, posX = 0, posY = 0, isDragging = false, startX, startY;
+        let baseScale = 1, currentSequence = [], currentPins = [], animationId;
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+            dropZone.addEventListener(event, (e) => { e.preventDefault(); e.stopPropagation(); });
+        });
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondrop = (e) => { if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); };
+        fileInput.onchange = (e) => { if (e.target.files[0]) processFile(e.target.files[0]); };
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                img.onload = () => { showPage('page2'); resetImage(); };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+                p.style.display = 'none';
+            });
+            const activePage = document.getElementById(id);
+            activePage.style.display = (id === 'page3' || id === 'page4') ? 'flex' : 'block';
+            setTimeout(() => activePage.classList.add('active'), 50);
+        }
+
+        function resetImage() {
+            canvas.width = 480; canvas.height = 480;
+            baseScale = Math.max(480 / img.width, 480 / img.height);
+            scale = baseScale;
+            posX = (480 - img.width * scale) / 2;
+            posY = (480 - img.height * scale) / 2;
+            zoomSlider.value = 100;
+            draw();
+        }
+
+        function draw() {
+            constrainPosition();
+            ctx.fillStyle = "white";
+            ctx.fillRect(0,0,480,480);
+            ctx.drawImage(img, posX, posY, img.width * scale, img.height * scale);
+        }
+
+        function constrainPosition() {
+            const w = img.width * scale, h = img.height * scale;
+            if (w >= 480) {
+                if (posX > 0) posX = 0;
+                if (posX < 480 - w) posX = 480 - w;
+            } else { posX = (480 - w) / 2; }
+            if (h >= 480) {
+                if (posY > 0) posY = 0;
+                if (posY < 480 - h) posY = 480 - h;
+            } else { posY = (480 - h) / 2; }
+        }
+
+        zoomSlider.oninput = (e) => applyZoom((baseScale * (e.target.value / 100)) / scale, 240, 240, true);
+        canvas.onmousedown = (e) => { isDragging = true; startX = e.clientX - posX; startY = e.clientY - posY; };
+        window.onmousemove = (e) => { if (isDragging) { posX = e.clientX - startX; posY = e.clientY - startY; draw(); } };
+        window.onmouseup = () => { isDragging = false; };
+
+        function applyZoom(f, cx, cy, fromS) {
+            const ns = scale * f;
+            if (ns < baseScale || ns > baseScale * 20) return;
+            posX = cx - (cx - posX) * f;
+            posY = cy - (cy - posY) * f;
+            scale = ns;
+            if (!fromS) zoomSlider.value = (scale / baseScale) * 100;
+            draw();
+        }
+
+        function adjustZoom(step) {
+            let newValue = parseInt(zoomSlider.value) + step;
+            newValue = Math.max(100, Math.min(1000, newValue));
+            zoomSlider.value = newValue;
+            applyZoom((baseScale * (newValue / 100)) / scale, 240, 240, true);
+        }
+
+        function changeImage() { cancelAnimationFrame(animationId); showPage('page1'); }
+        function backToEditor() { cancelAnimationFrame(animationId); showPage('page2'); }
+
+        async function generateArt() {
+            cancelAnimationFrame(animationId);
+            showPage('page3');
+            document.getElementById('weaving-loader').style.display = 'block';
+            document.getElementById('results').classList.add('hidden');
+
+            // Czyszczenie poprzedniego obrazu z canvasa
+            const c = document.getElementById('weavingCanvas');
+            c.getContext('2d').clearRect(0, 0, c.width, c.height);
+
+            const payload = {
+                image: canvas.toDataURL('image/png'),
+                pins: document.getElementById('pins').value,
+                lines: document.getElementById('lines').value
+            };
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                currentSequence = data.sequence;
+                currentPins = data.pins;
+                startWeaving(data.sequence, data.pins);
+
+                document.getElementById('downloadImg').onclick = () => window.location.href = data.result_url;
+                document.getElementById('downloadTxt').onclick = () => window.location.href = data.instruction_url;
+            } catch (err) {
+                alert("Wystąpił błąd podczas generowania obrazu. Spróbuj ponownie.");
+                backToEditor();
+            }
+        }
+
+        function startWeaving(seq, pins) {
+            const c = document.getElementById('weavingCanvas');
+            const v = c.getContext('2d');
+            v.clearRect(0, 0, 480, 480);
+            v.strokeStyle = "rgba(0,0,0,0.25)";
+            v.lineWidth = 0.3;
+            let i = 0;
+            function step() {
+                for(let n=0; n<40; n++) {
+                    if(i >= seq.length-1) { finish(); return; }
+                    const p1 = pins[seq[i]], p2 = pins[seq[i+1]];
+                    v.beginPath();
+                    // Zlikwidowane mnożenie skalujące - naprawione wyśrodkowanie
+                    v.moveTo(p1[0], p1[1]);
+                    v.lineTo(p2[0], p2[1]);
+                    v.stroke();
+                    i++;
+                }
+                animationId = requestAnimationFrame(step);
+            }
+            step();
+        }
+
+        function finish() {
+            cancelAnimationFrame(animationId);
+            document.getElementById('weaving-loader').style.display = 'none';
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function replayAnimation() {
+            cancelAnimationFrame(animationId);
+            startWeaving(currentSequence, currentPins);
+        }
+
+        // ---------- LOGIKA TRYBU INSTRUKTAŻOWEGO ---------- //
+        let currentStepIndex = 0;
+
+        function startGuide() {
+            showPage('page4');
+            currentStepIndex = 0;
+            document.getElementById('guideTotalSteps').innerText = currentSequence.length - 1;
+            drawGuideStep();
+        }
+
+        function exitGuide() {
+            showPage('page3');
+        }
+
+        function drawGuideStep() {
+            const c = document.getElementById('guideCanvas');
+            const v = c.getContext('2d');
+            v.clearRect(0, 0, c.width, c.height);
+
+            // 1. Rysuj wszystkie "stare" linie na blado
+            v.strokeStyle = "rgba(0,0,0,0.1)";
+            v.lineWidth = 0.3;
+            v.beginPath();
+            if (currentStepIndex > 0) {
+                const startPin = currentPins[currentSequence[0]];
+                v.moveTo(startPin[0], startPin[1]);
+                for (let i = 1; i <= currentStepIndex; i++) {
+                    const p = currentPins[currentSequence[i]];
+                    v.lineTo(p[0], p[1]);
+                }
+                v.stroke();
+            }
+
+            // 2. Rysuj "aktualną" linię (grubszą i fioletową)
+            if (currentStepIndex < currentSequence.length - 1) {
+                const p1Index = currentSequence[currentStepIndex];
+                const p2Index = currentSequence[currentStepIndex + 1];
+                const p1 = currentPins[p1Index];
+                const p2 = currentPins[p2Index];
+
+                v.strokeStyle = "#8b5cf6";
+                v.lineWidth = 2.0;
+                v.beginPath();
+                v.moveTo(p1[0], p1[1]);
+                v.lineTo(p2[0], p2[1]);
+                v.stroke();
+
+                // Narysuj piny na jej końcach
+                v.fillStyle = "#8b5cf6";
+                v.beginPath(); v.arc(p1[0], p1[1], 4, 0, Math.PI*2); v.fill();
+                v.beginPath(); v.arc(p2[0], p2[1], 4, 0, Math.PI*2); v.fill();
+
+                // 3. Zaktualizuj interfejs
+                document.getElementById('guideStepNum').innerText = currentStepIndex + 1;
+                document.getElementById('guidePinFrom').innerText = p1Index;
+                document.getElementById('guidePinTo').innerText = p2Index;
+            }
+            lucide.createIcons();
+        }
+
+        function nextStep() {
+            if (currentStepIndex < currentSequence.length - 2) {
+                currentStepIndex++;
+                drawGuideStep();
+            }
+        }
+
+        function prevStep() {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                drawGuideStep();
+            }
+        }
+
+        // Obsługa strzałek na klawiaturze w Trybie Instrukcji
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('page4').classList.contains('active')) {
+                if (e.key === 'ArrowRight') nextStep();
+                if (e.key === 'ArrowLeft') prevStep();
+            }
+        });
+
+    </script>
+</body>
+</html>
